@@ -1,0 +1,19 @@
+[project]
+name = "inhouse-vessel-detection"
+version = "0.1.0"
+description = "Vessel detection in Landsat thermal imagery with an MTU-Net segmentation model"
+requires-python = ">=3.11"
+authors = [{ name = "Dominic Weisser", email = "dominic.weisser@aistechspace.com" }]
+readme = "README.md"
+
+# Dependencies are managed with conda: see environment.yml.
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["Datasets"]
+
+[tool.ruff.lint]
+# Errors that break code at run time: syntax errors, undefined names,
+# invalid comparisons. Style rules can be added here later.
+select = ["E9", "F63", "F7", "F82"]

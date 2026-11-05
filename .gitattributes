@@ -1,0 +1,13 @@
+# Normalise line endings so Windows and Linux contributors produce clean diffs.
+* text=auto
+*.py   text eol=lf
+*.md   text eol=lf
+*.yml  text eol=lf
+*.toml text eol=lf
+*.csv  text eol=lf
+
+# Never try to diff or merge binary formats.
+*.png  binary
+*.jpg  binary
+*.tif  binary
+*.pth  binary
