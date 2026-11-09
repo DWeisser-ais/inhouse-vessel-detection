@@ -28,12 +28,12 @@ See [`Datasets/README.md`](Datasets/README.md) for the full dataset description 
 └── Scripts/
     ├── data/                  data pipeline: raw Landsat scenes -> 512x512 training tiles
     │   ├── pipeline_config.py     ALL paths, splits and constants live here
-    │   ├── run_data_pipeline.py   runs steps 1.0 -> 1.3 in order
+    │   ├── run_data_pipeline.py   runs steps 1.0 -> 1.2 (and 1.3 if enabled)
     │   ├── 0.0-Import_Mediterranean_Scenes.py
     │   ├── 1.0-Thermal_Imagery_Cleaning.py   ST_B10 -> Celsius -> land-masked uint8
     │   ├── 1.1-Rasterise_Vessel_Masks.py     vessel polygons -> label raster
     │   ├── 1.2-Tiling_scenes.py              scene -> tiles, split by scene
-    │   ├── 1.3-crrp_augment.py               copy-paste ship augmentation (train only)
+    │   ├── 1.3-crrp_augment.py               copy-paste ship augmentation (off by default)
     │   └── dataset.py                        PyTorch Dataset for the tiles
     ├── model/                 MTU-Net, loss, metrics, analysis plots
     └── training/              train.py, evaluate.py, visualisation
@@ -74,13 +74,40 @@ python run_data_pipeline.py      # builds Processed_Scenes/ and Tiled_Inputs/
 
 ```
 cd Scripts/training
-python train.py --epochs 300 --batch_size 4                 # writes checkpoints/
-python evaluate.py --checkpoint checkpoints/best.pth --split Validation   # pick the threshold
-python evaluate.py --checkpoint checkpoints/best.pth --split Test         # final numbers, once
+python train.py --epochs 300 --batch_size 4                   # writes checkpoints/
+python evaluate.py --checkpoint checkpoints/best.pth --split Validation
+python evaluate.py --checkpoint checkpoints/best.pth --split Test   # final numbers, once
 ```
 
-`evaluate.py` reports IoU, probability of detection (Pd) and false-alarm rate (Fa),
-overall and per region. Results go to `analysis/`.
+Training records these in `checkpoints/analysis/`, updated every epoch:
+
+| File | Contents |
+|---|---|
+| `loss_curves.png` | train, validation and test loss against epoch |
+| `validation_metrics.png` | precision, recall, F1, IoU and false alarms against epoch |
+| `training_history.csv` | every value above, one row per epoch |
+| `model_size_report.json` | parameters, weights, MACs/FLOPs, peak RAM, latency |
+
+The checkpoint with the best validation F1 is kept as `best.pth`. The test loss is
+logged for information only and never influences training.
+
+`evaluate.py` picks the decision threshold on the validation split (highest vessel F1),
+applies it to the requested split and writes to `checkpoints/evaluation/<split>/`:
+
+| File | Contents |
+|---|---|
+| `metrics.json` | every metric, overall and per region |
+| `per_scene.csv` | main metrics for each scene |
+| `threshold_sweep.csv` | precision, recall and F1 at every threshold |
+| `precision_recall.png` | precision-recall curve and scores against threshold |
+| `examples_detections.png` | tiles where vessels were found |
+| `examples_errors.png` | tiles with false positives and missed vessels |
+
+**Vessel metrics:** precision, recall (Pd), F1, average precision, false alarms per
+1000 km2, recall by vessel size. **Pixel metrics:** IoU, nIoU, Dice, false-alarm rate.
+Definitions are at the top of `Scripts/model/metrics.py`.
+
+Run `python Scripts/model/deployment_metrics.py` for the model-size report on its own.
 
 ## Changing the dataset
 

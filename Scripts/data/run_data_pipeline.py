@@ -1,11 +1,12 @@
 """
 run_data_pipeline.py
 ====================
-Runs the whole data pipeline in order: 1.0 -> 1.1 -> 1.2 -> 1.3.
+Runs the data pipeline in order: 1.0 -> 1.1 -> 1.2, plus 1.3 if USE_CRRP is True
+in pipeline_config.py (it is off by default).
 
     python run_data_pipeline.py                          # everything, all scenes
-    python run_data_pipeline.py --scenes USA_June29      # 1.0-1.2 for one scene, then CRRP
-    python run_data_pipeline.py --steps 1.2 1.3          # re-tile + re-augment only
+    python run_data_pipeline.py --scenes USA_June29      # the same steps for one scene
+    python run_data_pipeline.py --steps 1.2              # re-tile only
                                                          # (skips the slow 1.0 step)
 
 1.3 (CRRP) always rebuilds from ALL train scenes, because the harvested ship
@@ -39,7 +40,8 @@ def load(filename):
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
-    ap.add_argument('--steps', nargs='*', default=list(STEPS), choices=list(STEPS))
+    default_steps = [s for s in STEPS if s != '1.3' or cfg.USE_CRRP]
+    ap.add_argument('--steps', nargs='*', default=default_steps, choices=list(STEPS))
     ap.add_argument('--scenes', nargs='*', help='default: every scene in SPLITS')
     args = ap.parse_args()
 

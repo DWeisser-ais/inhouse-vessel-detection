@@ -8,8 +8,8 @@ Writes: Tiled_Inputs/Train_CRRP/<Scene>/Tiles + Labels  (synthetic tiles)
         Tiled_Inputs/Train_CRRP/<Scene>/manifest.csv
 
 Synthetic tiles live in their own folder rather than next to the real ones,
-so the real dataset stays clean, and train.py can switch CRRP on/off
-(USE_CRRP) for an ablation without deleting files. Train_CRRP is wiped and
+so the real dataset stays clean, and USE_CRRP in pipeline_config.py can switch
+CRRP on/off (off by default) without deleting files. Train_CRRP is wiped and
 rebuilt on every run, so changing CRRP_SETTINGS never leaves old tiles behind.
 
 Ship patches are harvested from ALL training scenes pooled; validation and

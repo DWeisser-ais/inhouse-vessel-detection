@@ -20,7 +20,7 @@ FOLDER LAYOUT (everything under DATASETS_ROOT; see Datasets/README.md)
         <product>_celsius_wgs84_masked.tif, <Scene>_mask.tif
     Tiled_Inputs/                       outputs of 1.2 and 1.3 (model input)
         Train/<Scene>/Tiles + Labels         real tiles
-        Train_CRRP/<Scene>/Tiles + Labels    synthetic CRRP tiles (train only)
+        Train_CRRP/<Scene>/Tiles + Labels    synthetic CRRP tiles (only if USE_CRRP)
         Validation/<Scene>/Tiles + Labels
         Test/<Scene>/Tiles + Labels
         <Split>/<Scene>/manifest.csv         one row per tile
@@ -58,23 +58,22 @@ TRAIN_CRRP  = 'Train_CRRP'
 VALIDATION  = 'Validation'
 TEST        = 'Test'
 
-#
-# Mediterranean split rule: scenes from the same day on the same Landsat path
-# overlap each other, so adjacent rows always stay in the same split. The
-# Aegean / Turkish coast (paths 180-182) trains; the Suez approach (176038-39)
-# validates; the Levant, Cyprus and Italy scenes test.
+# Split rule: scenes whose footprints overlap always share a split, so no water
+# appears in two splits. These groups must stay together: Qatar + Hormuz, the
+# three NE USA coastal scenes, the Aegean scenes (except 180034), 176034-35,
+# 174035-36, and 176038-39. The largest scenes train, so that no single scene
+# dominates Validation or Test. Vessels: about 76% Train, 10% Validation, 14% Test.
 SPLITS = {
-    TRAIN:      ['Malacca', 'Shanghai', 'Rotterdam', 'Qatar',
-                 'USA_June09', 'USA_June13_013031',
-                 'USA_June13_013032',
+    TRAIN:      ['Singapore', 'Shanghai',
+                 'USA_June13_013031', 'USA_June13_013032', 'USA_June29',
                  'Med_20200901_182032', 'Med_20200901_182033',
                  'Med_20200901_182034', 'Med_20200903_180032',
-                 'Med_20200903_180034', 'Med_20200910_181032'],
-    VALIDATION: ['Singapore',
-                 'Med_20200907_176038', 'Med_20200907_176039'],
-    TEST:       ['Hormuz', 'USA_June29',
+                 'Med_20200910_181032'],
+    VALIDATION: ['Rotterdam', 'Med_20200903_180034',
                  'Med_20200907_176034', 'Med_20200907_176035',
-                 'Med_20200909_174035', 'Med_20200909_174036',
+                 'Med_20200909_174035', 'Med_20200909_174036'],
+    TEST:       ['Hormuz', 'Qatar', 'Malacca', 'USA_June09',
+                 'Med_20200907_176038', 'Med_20200907_176039',
                  'Med_20200909_190030'],
 }
 
@@ -115,6 +114,9 @@ TILE_OVERLAP = 0.0
 # always kept regardless of this threshold.
 MIN_WATER_FRAC = {TRAIN: 0.10, VALIDATION: 0.01, TEST: 0.01}
 
+# CRRP copy-paste augmentation. Off: step 1.3 is skipped by run_data_pipeline.py
+# and train.py uses only real tiles. Set True to build and train with synthetic tiles.
+USE_CRRP = False
 CRRP_SETTINGS = dict(context_px=6, n_aug_per_tile=3,
                      ships_per_tile=(3, 12), seed=42)
 
@@ -243,8 +245,9 @@ def write_manifest(rows, path):
 def summarise_dataset():
     """Combine every per-scene manifest into Tiled_Inputs/manifest.csv and
     print + save a per-split, per-scene summary table."""
+    splits = (TRAIN, TRAIN_CRRP, VALIDATION, TEST) if USE_CRRP else (TRAIN, VALIDATION, TEST)
     rows = []
-    for split in (TRAIN, TRAIN_CRRP, VALIDATION, TEST):
+    for split in splits:
         for m in sorted((TILED_DIR / split).glob('*/manifest.csv')):
             with open(m, newline='') as f:
                 rows.extend(csv.DictReader(f))
@@ -271,7 +274,7 @@ def summarise_dataset():
 
     print("\n=================== DATASET SUMMARY ===================")
     print(f"  {'split':<11}{'scene':<22}{'tiles':>7}{'ship tiles':>12}{'ships':>8}")
-    for split in (TRAIN, TRAIN_CRRP, VALIDATION, TEST):
+    for split in splits:
         sub = [s for s in summary if s['split'] == split]
         for s in sub:
             print(f"  {split:<11}{s['scene']:<22}{s['tiles']:>7}"
