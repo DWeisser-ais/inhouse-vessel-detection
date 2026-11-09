@@ -1,7 +1,7 @@
-# In-house Vessel Detection
+# Aistech: In-house Vessel Detection Model
 
 Detects vessels in Landsat 8/9 thermal imagery (ST_B10, surface temperature) with
-**MTU-Net**, a segmentation network combining a ResNet-18 encoder, multi-level
+**MTU-Net** architecture, a segmentation network combining a ResNet-18 encoder, multi-level
 vision-transformer branches and a U-shaped decoder. The task has two classes:
 every pixel is either *vessel* or *not vessel*. Land is masked out and ignored.
 
@@ -48,8 +48,7 @@ conda env create -f environment.yml
 conda activate IHVesselDetection
 ```
 
-Always run the scripts inside the activated environment. On Windows, calling the
-environment's `python.exe` directly from Git Bash crashes GDAL with error `0xc06d007f`.
+Always run the scripts inside the activated environment. 
 
 ### 2. Data
 
