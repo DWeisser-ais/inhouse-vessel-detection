@@ -1,17 +1,16 @@
 # Aistech: In-house Vessel Detection Model
 
-Detects vessels in Landsat 8/9 thermal imagery (ST_B10, surface temperature) with
-**MTU-Net** architecture, a segmentation network combining a ResNet-18 encoder, multi-level
-vision-transformer branches and a U-shaped decoder. The task has two classes:
-every pixel is either *vessel* or *not vessel*. Land is masked out and ignored.
+This repository houses the model and information relating to a vessel detection model built inhouse within Aistech Space, which uses Landsat 8/9 thermal imagery (ST_B10, surface temperature) alongside a **MTU-Net**, a segmentation network combining a ResNet-18 encoder, multi-lebel ViT branches and a U-shaped decoder.
+The task has two classes: Every pixel is either *vessel* or *not vessel*.
+Land has been masked out and hence ignored.
 
 Training data comes from three regions, all processed the same way:
 
-| Region | Scenes | Source |
+| Region | Scenes | Years |
 |---|---|---|
-| Major ports | 6 | Hormuz, Malacca, Qatar, Rotterdam, Shanghai, Singapore |
-| NE USA | 4 | AI4COPSEC, June 2020 |
-| Mediterranean | 13 | AI4COPSEC, September 2020 |
+| International ports | 6 | 2025 and 2026 |
+| NE USA | 4 | June 2020 |
+| Mediterranean | 13 | September 2020 |
 
 See [`Datasets/README.md`](Datasets/README.md) for the full dataset description and
 [`Datasets/scene_catalogue.csv`](Datasets/scene_catalogue.csv) for every scene and its split.
@@ -27,16 +26,16 @@ See [`Datasets/README.md`](Datasets/README.md) for the full dataset description 
 ├── Datasets/                  DATA - not in git, except README.md and scene_catalogue.csv
 └── Scripts/
     ├── data/                  data pipeline: raw Landsat scenes -> 512x512 training tiles
-    │   ├── pipeline_config.py     ALL paths, splits and constants live here
-    │   ├── run_data_pipeline.py   runs steps 1.0 -> 1.2 (and 1.3 if enabled)
+    │   ├── pipeline_config.py                ALL paths, splits and constants live here
+    │   ├── run_data_pipeline.py              runs steps 1.0 -> 1.2 (and 1.3 if enabled)
     │   ├── 0.0-Import_Mediterranean_Scenes.py
     │   ├── 1.0-Thermal_Imagery_Cleaning.py   ST_B10 -> Celsius -> land-masked uint8
     │   ├── 1.1-Rasterise_Vessel_Masks.py     vessel polygons -> label raster
     │   ├── 1.2-Tiling_scenes.py              scene -> tiles, split by scene
     │   ├── 1.3-crrp_augment.py               copy-paste ship augmentation (off by default)
     │   └── dataset.py                        PyTorch Dataset for the tiles
-    ├── model/                 MTU-Net, loss, metrics, analysis plots
-    └── training/              train.py, evaluate.py, visualisation
+    ├── model/                                MTU-Net, loss, metrics, analysis plots
+    └── training/                             train.py, evaluate.py, visualisation
 ```
 
 ## Getting started
@@ -52,8 +51,8 @@ Always run the scripts inside the activated environment.
 
 ### 2. Data
 
-The imagery is several gigabytes and is **not stored in git**. Get a copy of the
-`Datasets/Full_Scenes/` folder from the team share and place it at `Datasets/Full_Scenes/`.
+The imagery is several gigabytes and is **not stored in git**. 
+Get a copy of the `Datasets/Full_Scenes/` folder from the team share and place it at `Datasets/Full_Scenes/`.
 Alternatively, keep it anywhere and point the code at it:
 
 ```
@@ -87,8 +86,7 @@ Training records these in `checkpoints/analysis/`, updated every epoch:
 | `training_history.csv` | every value above, one row per epoch |
 | `model_size_report.json` | parameters, weights, MACs/FLOPs, peak RAM, latency |
 
-The checkpoint with the best validation F1 is kept as `best.pth`. The test loss is
-logged for information only and never influences training.
+The checkpoint with the best validation F1 is kept as `best.pth`. 
 
 `evaluate.py` picks the decision threshold on the validation split (highest vessel F1),
 applies it to the requested split and writes to `checkpoints/evaluation/<split>/`:
@@ -102,7 +100,7 @@ applies it to the requested split and writes to `checkpoints/evaluation/<split>/
 | `examples_detections.png` | tiles where vessels were found |
 | `examples_errors.png` | tiles with false positives and missed vessels |
 
-**Vessel metrics:** precision, recall (Pd), F1, average precision, false alarms per
+**Vessel Detection metrics:** precision, recall (Pd), F1, average precision, false alarms per
 1000 km2, recall by vessel size. **Pixel metrics:** IoU, nIoU, Dice, false-alarm rate.
 Definitions are at the top of `Scripts/model/metrics.py`.
 
@@ -120,12 +118,6 @@ training. To add a scene or move one between splits, follow the steps in
 Model weights (`*.pth`) are not committed. Publish a trained model as a
 [GitHub Release](../../releases) and attach `best.pth`, together with the commit hash
 and the `scene_catalogue.csv` it was trained on.
-
-## Contributing
-
-1. Create a branch from `main`, for example `feature/rgb-input` or `fix/land-mask`.
-2. Keep data, weights and plots out of commits. `.gitignore` already excludes them.
-3. Open a pull request. CI must pass before merging.
 
 ## Data sources and licences
 
