@@ -1,6 +1,4 @@
 """
-pipeline_config.py
-==================
 ONE place for every path, split and constant the data pipeline and the
 training scripts share. Edit this file - not the individual scripts - when
 you add a scene, move a scene between splits, or move the dataset.
@@ -51,7 +49,7 @@ SHAPEFILES_SUBDIR = 'Shapefiles'
 
 # ===================================================================== #
 #  SPLITS - which scene goes where. Names must match the folder names in
-#  Full_Scenes EXACTLY (case-sensitive on Linux/Colab).
+#  Full_Scenes EXACTLY.
 # ===================================================================== #
 TRAIN       = 'Train'
 TRAIN_CRRP  = 'Train_CRRP'
